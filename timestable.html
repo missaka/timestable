@@ -1,32 +1,42 @@
 <html>
 <head>
-<style>
-  body {
-    font-size: 200%;
-    font-family: "Lucida Console", Monaco, monospace;
-  }
-  input {
-    font-size: 100%;
-  }
-  select {
-    font-size: 100%;
-  }
-  
-  div.correct {
-    display: none;
-  }
-  div.incorrect {
-    display: none;
-  }
-</style>
-
-</head
+  <style>
+    body {
+      font-size: 200%;
+      font-family: "Lucida Console", Monaco, monospace;
+    }
+    input {
+      font-size: 100%;
+    }
+    select {
+      font-size: 100%;
+    }
+    @keyframes bounceIn {
+      0% {
+        transform: scale(0.1);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    div.correct {
+      display: none;
+    }
+    div.incorrect {
+      display: none;
+    }
+    .scores {
+      transition: all .5s ease-in-out;
+    }
+  </style>
+</head>
 <body>
 <script>
 var nmbrs = new Map();
 var x = 0;
 var y = 0;
-var timesTable = 3;
 var correctCount = 0;
 var incorrectCount = 0;
 var local = window.localStorage;
@@ -51,7 +61,7 @@ function getNext() {
     document.getElementById("incorrect").style.display = "none";
     document.getElementById("correct").style.display = "none";
 
-    setX(timesTable);
+    setX(getTimesTable());
     var num = getNum();
     if (num == null) {
         window.setTimeout(start, 1000);
@@ -66,8 +76,8 @@ function getNext() {
 
 function start() {
     document.getElementById("ans").disabled = false;
-    createScoreRow();
     changeTimestable();
+    createScoreRow();
     correctCount = 0;
     incorrectCount = 0;
     document.getElementById("incorrect").style.display = "none";
@@ -138,41 +148,55 @@ function check() {
 function writeScore() {
     scores = document.getElementById('scores');
     score = scores.children[0];
-    score.children[0].innerHTML = correctCount;
-    score.children[3].innerHTML = incorrectCount;
+    score.children[1].innerHTML = correctCount;
+    score.children[4].innerHTML = incorrectCount;
+}
+
+function getTimesTable() {
+    return document.getElementById('timestable').selectedIndex + 1;
 }
 
 function changeTimestable() {
-   timesTable = document.getElementById('timestable').selectedIndex + 1;
-   local.setItem('timesTable', timesTable);
+   local.setItem('timesTable', getTimesTable());
 }
 
 function createScoreRow() {
-    var div = document.createElement("div");
-    div.innerHTML = `<div style="float: left;">0</div><div style="float: left;"><img src="images/Checkmark.svg" width="50px" height="50px" /></div><div style="float: left;">&nbsp;&nbsp</div><div style="float: left;" style="float: left;">0</div><div><img src="images/Xmark.svg" width="50px" height="50px" /></div>`;
-    document.getElementById('scores').prepend(div);
+  var div = document.createElement("div");
+  var old = null;
+
+  div.style.width = "100%";
+  div.style.overflow = "hidden";
+  div.style.border = "1px solid black";
+  div.style.animationDuration = "500ms";
+  div.style.animationName = "bounceIn";
+  div.innerHTML =
+    '<div style="float: left;">' + getTimesTable() + 'X:&nbsp;' + '</div>' +
+    '<div style="float: left;">0</div>' +
+    '<div style="float: left;"><img src="images/Checkmark.svg" width="50px" height="50px" /></div>' +
+    '<div style="float: left;">&nbsp;&nbsp</div>' +
+    '<div style="float: left;">0</div>' +
+    '<div style="float: left;"><img src="images/Xmark.svg" width="50px" height="50px" /></div>' +
+    '<div></div>';
+
+  if (document.getElementById('scores').children.length > 0) {
+    old = document.getElementById('scores').children[0]
+    document.getElementById('scores').children[0].remove()
+  }
+
+  document.getElementById('scores').appendChild(div)
+
+  if (correctCount + incorrectCount > 0) {
+    moveScore(old)
+  }
 }
 
-
+function moveScore(el) {
+  if (el != null) {
+    el.style.animation = "";
+    document.getElementById('history').prepend(el);
+  }
+}
 </script>
-
-<style>
-
-body {
-  font-size: 200%;
-}
-input {
-  font-size: 100%;
-}
-
-div.correct {
-   display: none;
-}
-div.incorrect {
-   display: none;
-}
-
-</style>
 
 <div style="width: 100%; overflow: hidden;">
   <div style="float: left;" id="x"> </div>
@@ -183,14 +207,14 @@ div.incorrect {
     <input type="text" size="3" id="ans" onkeyup="javascript:check();"/>
   </div>
   <div style="float: left;" id="correct">
-      <img src="Checkmark.svg" width="40px" height="40px" />
+      <img src="images/Checkmark.svg" width="40px" height="40px" />
   </div>
   <div style="float: left;" id="incorrect">
-      <img src="Xmark.svg" width="40px" height="40px" />
+      <img src="images/Xmark.svg" width="40px" height="40px" />
   </div>
 </div>
 <div>
-Times table: <select id="timestable" onchange="javascript:changeTimestable();">
+Times Table: <select id="timestable" onchange="javascript:start();">
   <option value="1">1</option>
   <option value="2">2</option>
   <option value="3">3</option>
@@ -204,9 +228,10 @@ Times table: <select id="timestable" onchange="javascript:changeTimestable();">
   <option value="11">11</option>
   <option value="12">12</option>
 </select>
-<input type="button" value="Start" onclick="javascript:start();">
 </div>
+<div>--Scores--</div>
 <div id="scores"></div>
+<div id="history"></div>
 </body>
 
 <script>

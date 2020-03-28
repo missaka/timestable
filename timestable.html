@@ -40,6 +40,9 @@ var y = 0;
 var correctCount = 0;
 var incorrectCount = 0;
 var local = window.localStorage;
+var firstKeyPress = null;
+var sessionTime = null;
+
 function setX(num) {
   document.getElementById("x").innerHTML = num;
   x = num;
@@ -75,22 +78,26 @@ function getNext() {
 }
 
 function start() {
-    document.getElementById("ans").disabled = false;
-    changeTimestable();
-    createScoreRow();
-    correctCount = 0;
-    incorrectCount = 0;
-    document.getElementById("incorrect").style.display = "none";
-    document.getElementById("correct").style.display = "none";
-    nmbrs = new Map();
-    for(var i=0; i<12; i++) {
-        nmbrs.set(i, (i+1));
-    }
-    getNext();
+  document.getElementById("ans").disabled = false;
+  changeTimestable();
+  createScoreRow();
+  correctCount = 0;
+  incorrectCount = 0;
+  document.getElementById("incorrect").style.display = "none";
+  document.getElementById("correct").style.display = "none";
+  nmbrs = new Map();
+  for(var i=0; i<12; i++) {
+      nmbrs.set(i, (i+1));
+  }
+  getNext();
 }
 
 function end() {
   document.getElementById('ans').disabled = true;
+  if (firstKeyPress !== null) {
+    sessionTime = new Date().getTime() - firstKeyPress
+    firstKeyPress = null;
+  }
 }
 
 function correct() {
@@ -131,6 +138,9 @@ function getRandomInt(max) {
 }
 
 function check() {
+  if (firstKeyPress === null) {
+    firstKeyPress = new Date().getTime();
+  }
   val = document.getElementById("ans").value;
   if (val !== "") {
      expected = x*y;
@@ -164,6 +174,7 @@ function createScoreRow() {
   var div = document.createElement("div");
   var old = null;
 
+  
   div.style.width = "100%";
   div.style.overflow = "hidden";
   div.style.border = "1px solid black";
@@ -176,7 +187,7 @@ function createScoreRow() {
     '<div style="float: left;">&nbsp;&nbsp</div>' +
     '<div style="float: left;">0</div>' +
     '<div style="float: left;"><img src="images/Xmark.svg" width="50px" height="50px" /></div>' +
-    '<div></div>';
+    '<div style="float: right;"></div>';
 
   if (document.getElementById('scores').children.length > 0) {
     old = document.getElementById('scores').children[0]
@@ -186,15 +197,48 @@ function createScoreRow() {
   document.getElementById('scores').appendChild(div)
 
   if (correctCount + incorrectCount > 0) {
-    moveScore(old)
+    moveScore(old, sessionTime)
   }
 }
 
-function moveScore(el) {
+function moveScore(el, elapsedTime) {
   if (el != null) {
     el.style.animation = "";
     document.getElementById('history').prepend(el);
+    if (elapsedTime !== null) {
+      el.children[6].innerHTML = elapsedToString(elapsedTime);
+    }
   }
+}
+
+function elapsedToString(elapsedTime) {
+  var totalSecs = Math.floor(elapsedTime/1000);
+
+  var seconds = totalSecs % 60;
+  totalSecs -= seconds;
+
+  var minutes = Math.floor(totalSecs / 60);
+  var str = "";
+
+  if (minutes > 0) {
+    str += minutes;
+    str += " min";
+  }
+
+  if (seconds > 0) {
+    if (str !== "") {
+      str += ", ";
+    }
+    str += seconds;
+    str += " sec";
+  }
+
+  return str;
+}
+
+function newSession() {
+  end();
+  start();
 }
 </script>
 
@@ -214,7 +258,7 @@ function moveScore(el) {
   </div>
 </div>
 <div>
-Times Table: <select id="timestable" onchange="javascript:start();">
+Times Table: <select id="timestable" onchange="javascript:newSession();">
   <option value="1">1</option>
   <option value="2">2</option>
   <option value="3">3</option>

@@ -1,0 +1,217 @@
+<html>
+<head>
+<style>
+  body {
+    font-size: 200%;
+    font-family: "Lucida Console", Monaco, monospace;
+  }
+  input {
+    font-size: 100%;
+  }
+  select {
+    font-size: 100%;
+  }
+  
+  div.correct {
+    display: none;
+  }
+  div.incorrect {
+    display: none;
+  }
+</style>
+
+</head
+<body>
+<script>
+var nmbrs = new Map();
+var x = 0;
+var y = 0;
+var timesTable = 3;
+var correctCount = 0;
+var incorrectCount = 0;
+var local = window.localStorage;
+function setX(num) {
+  document.getElementById("x").innerHTML = num;
+  x = num;
+}
+function setY(num) {
+  document.getElementById("y").innerHTML = num;
+  y = num;
+}
+
+function load() {
+    var t = local.getItem('timesTable');
+    if (t !== null) {
+        timesTable = t;
+        document.getElementById('timestable').selectedIndex = t-1;
+    }
+}        
+
+function getNext() {
+    document.getElementById("incorrect").style.display = "none";
+    document.getElementById("correct").style.display = "none";
+
+    setX(timesTable);
+    var num = getNum();
+    if (num == null) {
+        window.setTimeout(start, 1000);
+        end();
+        return;
+    }
+    console.log("new num = " + num);
+    setY(num);
+    document.getElementById("ans").value = "";
+    document.getElementById("ans").focus();
+}
+
+function start() {
+    document.getElementById("ans").disabled = false;
+    createScoreRow();
+    changeTimestable();
+    correctCount = 0;
+    incorrectCount = 0;
+    document.getElementById("incorrect").style.display = "none";
+    document.getElementById("correct").style.display = "none";
+    nmbrs = new Map();
+    for(var i=0; i<12; i++) {
+        nmbrs.set(i, (i+1));
+    }
+    getNext();
+}
+
+function end() {
+  document.getElementById('ans').disabled = true;
+}
+
+function correct() {
+    correctCount += 1;
+    document.getElementById("correct").style.display = "block";
+    document.getElementById("incorrect").style.display = "none";
+    window.setTimeout(getNext, 1000);
+    writeScore();
+}
+
+function incorrect() {
+    incorrectCount += 1;
+    document.getElementById("correct").style.display = "none";
+    document.getElementById("incorrect").style.display = "block";
+    window.setTimeout(getNext, 1000);
+    writeScore();
+}
+
+function getNum() {
+    var keys = Array.from(nmbrs.keys());
+    var max = keys.length;
+    if (max == 0) {
+        return null;
+    }
+
+    var idx = getRandomInt(max);
+    key = keys[idx];
+    num = nmbrs.get(key);
+    if (!nmbrs.delete(key)) {
+        console.log("key not removed:" + key);
+    }
+
+    return num;
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max );
+}
+
+function check() {
+  val = document.getElementById("ans").value;
+  if (val !== "") {
+     expected = x*y;
+     if (parseInt(val) == expected) {
+         correct();
+     } else {
+         expectedStr = expected.toString();
+         if (val.length == expectedStr.length) {
+             incorrect();
+         }
+     }
+  }
+}
+
+function writeScore() {
+    scores = document.getElementById('scores');
+    score = scores.children[0];
+    score.children[0].innerHTML = correctCount;
+    score.children[3].innerHTML = incorrectCount;
+}
+
+function changeTimestable() {
+   timesTable = document.getElementById('timestable').selectedIndex + 1;
+   local.setItem('timesTable', timesTable);
+}
+
+function createScoreRow() {
+    var div = document.createElement("div");
+    div.innerHTML = `<div style="float: left;">0</div><div style="float: left;"><img src="images/Checkmark.svg" width="50px" height="50px" /></div><div style="float: left;">&nbsp;&nbsp</div><div style="float: left;" style="float: left;">0</div><div><img src="images/Xmark.svg" width="50px" height="50px" /></div>`;
+    document.getElementById('scores').prepend(div);
+}
+
+
+</script>
+
+<style>
+
+body {
+  font-size: 200%;
+}
+input {
+  font-size: 100%;
+}
+
+div.correct {
+   display: none;
+}
+div.incorrect {
+   display: none;
+}
+
+</style>
+
+<div style="width: 100%; overflow: hidden;">
+  <div style="float: left;" id="x"> </div>
+  <div style="float: left;">&nbsp;X&nbsp;</div>
+  <div id="y" style="float: left;"> </div>
+  <div style="float: left;">&nbsp;=&nbsp;</div>
+  <div style="float: left;" id="z">
+    <input type="text" size="3" id="ans" onkeyup="javascript:check();"/>
+  </div>
+  <div style="float: left;" id="correct">
+      <img src="Checkmark.svg" width="40px" height="40px" />
+  </div>
+  <div style="float: left;" id="incorrect">
+      <img src="Xmark.svg" width="40px" height="40px" />
+  </div>
+</div>
+<div>
+Times table: <select id="timestable" onchange="javascript:changeTimestable();">
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+  <option value="10">10</option>
+  <option value="11">11</option>
+  <option value="12">12</option>
+</select>
+<input type="button" value="Start" onclick="javascript:start();">
+</div>
+<div id="scores"></div>
+</body>
+
+<script>
+load();
+start();
+</script>
+
+</html>

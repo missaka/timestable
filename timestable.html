@@ -52,12 +52,33 @@ function setY(num) {
   y = num;
 }
 
+function sound(src) {
+  this.sound = document.createElement("audio");
+  this.sound.src = src;
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  document.body.appendChild(this.sound);
+  this.play = function(){
+    this.sound.play();
+  }
+  this.stop = function(){
+    this.sound.pause();
+  }
+}
+
+var correctSound = null;
+var incorrectSound = null;
+
 function load() {
     var t = local.getItem('timesTable');
     if (t !== null) {
         timesTable = t;
         document.getElementById('timestable').selectedIndex = t-1;
     }
+    correctSound = new sound("audio/correct.wav");
+    incorrectSound = new sound("audio/incorrect.wav");
+    // Load up sounds
 }        
 
 function getNext() {
@@ -102,6 +123,7 @@ function end() {
 
 function correct() {
     correctCount += 1;
+    correctSound.play()
     document.getElementById("correct").style.display = "block";
     document.getElementById("incorrect").style.display = "none";
     window.setTimeout(getNext, 1000);
@@ -110,6 +132,7 @@ function correct() {
 
 function incorrect() {
     incorrectCount += 1;
+    incorrectSound.play();
     document.getElementById("correct").style.display = "none";
     document.getElementById("incorrect").style.display = "block";
     window.setTimeout(getNext, 1000);

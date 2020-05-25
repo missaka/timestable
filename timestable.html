@@ -53,22 +53,19 @@ function setY(num) {
 }
 
 function sound(src) {
-  this.sound = document.createElement("audio");
-  this.sound.src = src;
-  this.sound.setAttribute("preload", "auto");
-  this.sound.setAttribute("controls", "none");
-  this.sound.style.display = "none";
-  document.body.appendChild(this.sound);
-  this.play = function(){
-    this.sound.play();
-  }
-  this.stop = function(){
-    this.sound.pause();
-  }
+  var s = document.createElement("audio");
+  s.src = src;
+  s.setAttribute("preload", "auto");
+  s.setAttribute("controls", "none");
+  s.style.display = "none";
+  document.body.appendChild(s);
+  return s;
 }
 
 var correctSound = null;
 var incorrectSound = null;
+var timesSound = null;
+var numberSounds = {};
 
 function load() {
     var t = local.getItem('timesTable');
@@ -76,16 +73,22 @@ function load() {
         timesTable = t;
         document.getElementById('timestable').selectedIndex = t-1;
     }
+    // Load up sounds
     correctSound = new sound("audio/correct.wav");
     incorrectSound = new sound("audio/incorrect.wav");
-    // Load up sounds
+    timesSound = new sound("audio/X.wav");
+    for (var i=1; i<=12; i++) {
+      numberSounds[i] = new sound("audio/" + i + ".wav");
+    }
 }        
 
 function getNext() {
     document.getElementById("incorrect").style.display = "none";
     document.getElementById("correct").style.display = "none";
 
-    setX(getTimesTable());
+    var x = getTimesTable();
+
+    setX(x);
     var num = getNum();
     if (num == null) {
         window.setTimeout(start, 1000);
@@ -96,6 +99,33 @@ function getNext() {
     setY(num);
     document.getElementById("ans").value = "";
     document.getElementById("ans").focus();
+
+    say(x, num);
+}
+
+function say(x, y) {
+  if (document.getElementById('voice').checked == false) {
+    return;
+  }
+  
+  var first = numberSounds[x];
+  var second = numberSounds[y];
+
+  const onceOnly = {
+    once: true
+  };
+  
+  try {
+    first.play();
+    first.addEventListener('ended', function() {
+      timesSound.play();
+      timesSound.addEventListener('ended', function() {
+        second.play();
+      }, onceOnly);
+    }, onceOnly);
+  } catch(err) {
+    alert(err);
+  }
 }
 
 function start() {
@@ -295,6 +325,9 @@ Times Table: <select id="timestable" onchange="javascript:newSession();">
   <option value="11">11</option>
   <option value="12">12</option>
 </select>
+</div>
+<div id="settings">
+  Voice <input type="checkbox" id="voice" />
 </div>
 <div>--Scores--</div>
 <div id="scores"></div>
